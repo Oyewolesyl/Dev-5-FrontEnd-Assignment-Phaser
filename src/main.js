@@ -2,7 +2,13 @@ import './style.css'
 import Phaser from 'phaser'
 
 const sizes = { width: 500, height: 500 }
-const speedDown = 150
+const speedDown = 100
+
+const gameStartDiv = document.querySelector("#gameStartDiv")
+const gameStartBtn = document.querySelector("#gameStartBtn")
+const gameEndDiv = document.querySelector("#gameEndDiv")
+const gameWinLoseSpan = document.querySelector("#gameWinLoseSpan")
+const gameEndScoreSpan = document.querySelector("#gameEndScoreSpan")
 
 class GameScene extends Phaser.Scene {
   constructor() {
@@ -28,10 +34,10 @@ class GameScene extends Phaser.Scene {
   }
 
   create() {
+    this.scene.pause("scene-game")
     this.coinMusic = this.sound.add('coin')
     this.bgMusic = this.sound.add('bgMusic', { loop: true })
     this.bgMusic.play()
-
     this.add.image(0, 0, 'bg').setOrigin(0, 0)
 
     this.player = this.physics.add
@@ -46,7 +52,6 @@ class GameScene extends Phaser.Scene {
     this.target.setVelocityY(speedDown)
 
     this.physics.add.overlap(this.target, this.player, this.targetHit, null, this)
-
     this.cursor = this.input.keyboard.createCursorKeys()
 
     this.textScore = this.add.text(sizes.width - 120, 10, 'Score: 0', {
@@ -54,28 +59,25 @@ class GameScene extends Phaser.Scene {
       fill: '#000000',
     })
 
-    this.timedEvent = this.time.delayedCall(3000, this.gameOver, [], this)
     this.textTime = this.add.text(10, 10, 'Remaining Time: 00', {
       font: '25px Arial',
       fill: '#000000',
     })
 
-    this.timedEvent = this.time.delayedCall(3000,this.gameOver,[, this])
-
-    this.emitter=this.add.particles(0,0, "money",{
-      speed:100,
-      gravityY:speedDown-200,
-      scale:0.04,
-      duration:100,
-      emitting:false
+    this.timedEvent = this.time.delayedCall(15000, this.gameOver, [], this)
+    this.emitter = this.add.particles(0, 0, "money", {
+      speed: 100,
+      gravityY: speedDown - 200,
+      scale: 0.04,
+      duration: 100,
+      emitting: false
     })
-    this.emitter.startFollow(this.player, this.player.width / 2, this.player.height / 2,
-     true);
+    this.emitter.startFollow(this.player, this.player.width / 2, this.player.height / 2, true)
   }
 
   update() {
     this.remainingTime = this.timedEvent.getRemainingSeconds()
-    this.textTime.setText(`Remaining Time: ${Math.round(this.remainingTime).toString()}`)
+    this.textTime.setText(`Remaining Time: ${Math.round(this.remainingTime)}`)
 
     if (this.target.y >= sizes.height) {
       this.target.setY(0)
@@ -83,7 +85,6 @@ class GameScene extends Phaser.Scene {
     }
 
     const { left, right } = this.cursor
-
     if (left.isDown) {
       this.player.setVelocityX(-this.playerSpeed)
     } else if (right.isDown) {
@@ -107,7 +108,10 @@ class GameScene extends Phaser.Scene {
   }
 
   gameOver() {
-    console.log('Game Over')
+    this.scene.pause()
+    gameEndScoreSpan.textContent = this.points
+    gameWinLoseSpan.textContent = this.points >= 10 ? 'You Win!' : 'Try Again'
+    gameEndDiv.style.display = 'flex'
   }
 }
 
@@ -129,6 +133,11 @@ const config = {
 }
 
 const game = new Phaser.Game(config)
+
+gameStartBtn.addEventListener("click", () => {
+  gameStartDiv.style.display = "none"
+  game.scene.resume("scene-game")
+})
 
 function resizeGame() {
   const canvas = game.canvas
